@@ -4,6 +4,8 @@ const app = express()
 
 app.use(express.static(__dirname + '/public'))
 app.set('view engine','ejs')
+app.use(express.json())
+app.use(express.urlencoded({extended:true}))
 
 // 몽고디비 연결 세팅 코드
 const { MongoClient } = require('mongodb');
@@ -40,6 +42,18 @@ app.get('/shop',(요청,응답) => {
 
 app.get('/list',async(요청,응답) => {
     let result = await db.collection('post').find().toArray() // document 콜렉션 모두 가져오기 
-    응답.render('list.ejs',{posts : result})
+    응답.render('list.ejs',{post : result})
 })
 
+// REST API 규칙 살펴보기
+// 글 작성 기능
+// 1. 유저가 작성한 글을 DB에 저장해주기 -> 유저가 직접 디비랑 통신하게 두면 안됨 중간에 검사 필요 검사는 서버가 담당함
+// 글 작성페이지에서 글 작성해서 서버로 전송 -> 서버가 검사 -> 디비에 저장 이걸 코드화 해보자
+
+app.get('/write',(요청,응답) => {
+    응답.render('write.ejs')
+})
+
+app.get('/newpost',(요청,응답) => {
+    console.log(요청.body)
+})

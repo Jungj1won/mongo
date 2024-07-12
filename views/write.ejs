@@ -9,16 +9,13 @@
 <body class="grey-bg">
   
   <%- include('nav.ejs') %>
+  <form class="form-box" action = "/newpost" method = "POST">
+    <h4>글쓰기</h4>
+    <input name = "title">
+    <input name = "content">
+    
+    <button type="submit">전송</button>
+  </form> 
 
-
-  <div class="white-bg">
-    <% for (let i = 0; i < post.length; i++){ %>
-      <div class="list-box">
-        <h4><%= post[i].title %></h4>
-        <p>글내용임</p>
-      </div>
-    <% } %>
-  </div> 
- 
 </body>
 </html>
