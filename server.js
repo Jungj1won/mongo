@@ -1,14 +1,13 @@
 const express = require('express')  // express 라이브러리 사용 
 const app = express()
 
-
 app.use(express.static(__dirname + '/public'))
 app.set('view engine','ejs')
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
 // 몽고디비 연결 세팅 코드
-const { MongoClient } = require('mongodb');
+const { MongoClient , ObjectId} = require('mongodb');
 
 let db;
 const url = 'mongodb+srv://jj1jj1q:UrEyyimnLRmaESip@cluster0.oei3cah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
@@ -54,6 +53,43 @@ app.get('/write',(요청,응답) => {
     응답.render('write.ejs')
 })
 
-app.get('/newpost',(요청,응답) => {
+app.post('/newpost',async(요청,응답) => {
     console.log(요청.body)
+
+    
+    
+    //에러시 다른 코드 실행은 try catch 문법 
+    try {
+        // 제목이 비어있으면 디비 추가하지 마라..
+        // 예외처리 
+        if (요청.body.title == ''){
+            응답.send('제목입력해줘')
+        } else {
+
+            await db.collection('post').insertOne({title : 요청.body.title, content : 요청.body.content}) // 디비에 데이터 넣는 코드 
+            응답.redirect('/list') // 서버기능 실행 끝나면 응답해주기 유저를 다른 페이지로 이동시켜줌 
+        }
+    } catch(e) {
+        console.log(e)
+        응답.status(500).send('서버에러남 ㅅㄱ')
+    }
 })
+
+// 기능이 어케 돌아가는지부터 파악해야지
+
+app.get('/detail/:aaaa',async(요청,응답)=>{   // :aaaa 유저가 이 자리에 아무문자나 입력시 
+    console.log(요청.params)
+    let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.aaaa)}) // findOne 안에꺼 찾아옴
+    console.log(result)  
+    응답.render('detail.ejs',{post : result})
+})
+
+
+// 상세페이지 기능
+// 1. 유저가 /detail/어쩌구 접속하면
+// 2. 아이디가 어쩌구인 글을 디비에서 찾아서
+// 3. ejs 파일에 박아서 보내줌  
+
+// 근데 누가 직접 아디를 입력함 
+// 링크로 해야지
+
