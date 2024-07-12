@@ -14,7 +14,8 @@
   <div class="white-bg">
     <% for (let i = 0; i < post.length; i++){ %>
       <div class="list-box">
-        <h4><%= post[i].title %></h4>
+        <h4><a href = "/detail/<%= post[i]._id %>"><%= post[i].title %></h4></a>
+        <a href = "/edit/<%= post[i]._id %>">✏️</a>
         <p>글내용임</p>
       </div>
     <% } %>

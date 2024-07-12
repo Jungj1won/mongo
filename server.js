@@ -78,10 +78,16 @@ app.post('/newpost',async(요청,응답) => {
 // 기능이 어케 돌아가는지부터 파악해야지
 
 app.get('/detail/:aaaa',async(요청,응답)=>{   // :aaaa 유저가 이 자리에 아무문자나 입력시 
-    console.log(요청.params)
-    let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.aaaa)}) // findOne 안에꺼 찾아옴
-    console.log(result)  
-    응답.render('detail.ejs',{post : result})
+    
+    try {
+        console.log(요청.params)
+        let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.aaaa)}) // findOne 안에꺼 찾아옴
+        console.log(result)  
+        응답.render('detail.ejs',{post : result})
+    } catch(e) {
+        console.log(e)
+        응답.status(500).send("이상한 url 들어옴")
+    }
 })
 
 
@@ -93,3 +99,24 @@ app.get('/detail/:aaaa',async(요청,응답)=>{   // :aaaa 유저가 이 자리�
 // 근데 누가 직접 아디를 입력함 
 // 링크로 해야지
 
+
+// 글 수정 버튼
+// 1. 수정버튼 누르면 수정페이지로 이동
+// 2. 수정페이지에는 기존 글이 채워져있음
+// 3. 전송 누르면 입력한 내용으로 디비 글 수정 
+
+app.get('/edit/:id', async(요청,응답)=>{
+
+    // db.collection('post').updateOne({_id : new ObjectId(요청.params.id)},{$set : {title : 요청.body.title, content : 요청.body.content}}) // 수정 코드
+
+    let result = await db.collection('post').findOne({_id : new ObjectId(요청.params.id)})
+    응답.render('edit.ejs',{post : result})
+})
+
+app.post('/edit', async(요청,응답)=>{
+
+    await db.collection('post').updateOne({_id : new ObjectId(요청.body.id)},{$set : {title : 요청.body.title, content : 요청.body.content}}) // 수정 코드
+
+    console.log(요청.body)
+    응답.redirect('/list')
+})
