@@ -1,10 +1,13 @@
 const express = require('express')  // express 라이브러리 사용 
 const app = express()
+const methodOverride = require('method-override')
 
+app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public'))
 app.set('view engine','ejs')
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
+
 
 // 몽고디비 연결 세팅 코드
 const { MongoClient , ObjectId} = require('mongodb');
@@ -113,10 +116,13 @@ app.get('/edit/:id', async(요청,응답)=>{
     응답.render('edit.ejs',{post : result})
 })
 
-app.post('/edit', async(요청,응답)=>{
+app.put('/edit', async(요청,응답)=>{
 
-    await db.collection('post').updateOne({_id : new ObjectId(요청.body.id)},{$set : {title : 요청.body.title, content : 요청.body.content}}) // 수정 코드
+    await db.collection('post').updateOne({ _id : 1 },
+        {$inc : {like : -2}}) 
 
-    console.log(요청.body)
-    응답.redirect('/list')
+    // await db.collection('post').updateOne({_id : new ObjectId(요청.body.id)},{$set : {title : 요청.body.title, content : 요청.body.content}}) // 수정 코드
+
+    // console.log(요청.body)
+    // 응답.redirect('/list')
 })
