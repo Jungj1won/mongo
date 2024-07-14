@@ -16,10 +16,23 @@
       <div class="list-box">
         <h4><a href = "/detail/<%= post[i]._id %>"><%= post[i].title %></h4></a>
         <a href = "/edit/<%= post[i]._id %>">✏️</a>
+        <span class = 'delete' data-id="<%= post[i]._id %>">🗑️</span>
         <p>글내용임</p>
       </div>
     <% } %>
   </div> 
- 
+  
+  <script>
+    for (let i = 0; i < '<%= post.length %>'; i++){
+      document.querySelectorAll('.delete')[i].addEventListener('click',function(e){
+        fetch('/delete?docid='+e.target.dataset.id,{
+        method : 'DELETE'
+        })
+        .then((r)=>r.text())
+        .then((r)=>{ console.log(r) })
+      })
+    } 
+    
+  </script>
 </body>
 </html>

@@ -126,3 +126,20 @@ app.put('/edit', async(요청,응답)=>{
     // console.log(요청.body)
     // 응답.redirect('/list')
 })
+
+// 글 삭제버튼 누르면 해당 글 디비에서 삭제
+// 유저가 직접 하면 문제 생길 확률 높음
+// 글 삭제버튼 누르면 서버로 요청
+// 서버는 확인 후 해당 글 디비에서 삭제
+// AJAX 사용
+
+app.get('/abc',async(요청,응답)=>{
+    console.log('안녕')
+    console.log(요청.query)
+})
+
+app.delete('/delete' , async(요청,응답)=>{
+    console.log(요청.query)
+    await db.collection('post').deleteOne({ _id : new ObjectId(요청.query.docid) })
+    응답.send('삭제완료')
+})
