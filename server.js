@@ -1,12 +1,34 @@
 const express = require('express')  // express 라이브러리 사용 
 const app = express()
 const methodOverride = require('method-override')
+const bcrypt = require('bcrypt')
 
 app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public'))
 app.set('view engine','ejs')
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
+
+
+//passport 라이브러리 세팅 코드
+const session = require("express-session")
+const passport = require('passport')
+const LocalStrategy = require('passport-local')
+const MongoStore = require('connect-mongo')
+
+// app.use 순서 지키기 
+app.use(passport.initialize())
+app.use(session({
+    secret : "5454kj**", // 세션의 document id 는 암호화에서 유저에게 보냄
+    resave : false,  // 유저가 서버로 요청할 때마다 세션 갱신할건지 보통 false
+    saveUninitialized : false, // 로그인 안해도 세션 만들건지 보통 false
+    cookie : {maxAge : 60 * 60 * 1000},
+    store : MongoStore.create({
+        mongoUrl : 'mongodb+srv://jj1jj1q:UrEyyimnLRmaESip@cluster0.oei3cah.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+        dbName : 'forum'
+    })
+}))
+app.use(passport.session())
 
 
 // 몽고디비 연결 세팅 코드
@@ -152,4 +174,80 @@ app.get('/list/:id',async(요청,응답) => {
 app.get('/list/next/:id',async(요청,응답) => {
     let result = await db.collection('post').find({_id : {$gt : new ObjectId(요청.params.id) }}).limit(5).toArray() 
     응답.render('list.ejs',{post : result})
+})
+
+
+
+//회원가입 session 방식
+// 1. 가입기능
+// 2. 로그인 기능
+// 3. 로그인 완료시 session만들기
+// 4. 로그인 완료시 유저에게 입장권 보내줌
+// 5. 로그인 여부 확인하고 싶으면 입장권 까봄
+// 회원가입 기능 쉽게 만들어주는 passport 라이브러리 사용
+
+passport.use(new LocalStrategy(async (입력한아이디, 입력한비번, cb) => {
+    // 제출한 아이디 비번 검사하는 로직 
+    let result = await db.collection('user').findOne({username : 입력한아이디})
+    if (!result) {
+        return cb(null,false,{ message : '아이디가 존재하지 않습니다.'})
+    }
+    
+    if (await bcrypt.compare(입력한비번, result.password)) {
+        return cb(null,result)
+
+    } else {
+        return cb(null,false,{message : '비밀번호가 일치하지 않습니다.'});
+    }
+}))
+
+passport.serializeUser((user,done) => {
+    console.log(user)
+    process.nextTick(()=>{
+        done(null, {id : user._id, username : user.username}) 
+    })
+})
+
+passport.deserializeUser(async(user,done) => {
+    let result = await db.collection('user').findOne({_id : new ObjectId(user.id)})
+    delete result.password
+    process.nextTick(()=>{
+        done(null,result) 
+    })
+})
+
+app.get('/login',async(요청,응답) => {
+    console.log(요청.user)
+    응답.render('login.ejs')
+})
+
+app.post('/login',async(요청,응답,next) => {
+    
+    passport.authenticate('local',(error,user,info)=>{
+        if(error) return 응답.status(500).json(error)
+        if(!user) return 응답.status(401).json(info.message)
+        요청.logIn(user, (err) =>{
+            if(err) return next(err)
+            응답.redirect('/')
+        }) // 세션만들어주기
+    })(요청, 응답, next)
+
+
+})
+
+app.get('/register', (요청,응답) => {
+    응답.render('register.ejs')
+})
+
+app.post('/register', async(요청,응답) => {
+
+    let 해쉬 = await bcrypt.hash(요청.body.password, 10)
+    console.log(해쉬)
+
+    await db.collection('user').insertOne({
+        username : 요청.body.username,
+        password : 해쉬
+    }
+    )
+    응답.redirect('/')
 })
